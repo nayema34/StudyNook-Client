@@ -1,0 +1,87 @@
+'use client';
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as authApi from '../lib/auth';
+
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check login status on load
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      try {
+        const userData = await authApi.getMe();
+        setUser(userData);
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkLoggedIn();
+  }, []);
+
+  const login = async (email, password) => {
+    setLoading(true);
+    try {
+      const userData = await authApi.login(email, password);
+      setUser(userData);
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Login failed';
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (name, email, photoUrl, password) => {
+    setLoading(true);
+    try {
+      const resData = await authApi.register(name, email, photoUrl, password);
+      return { success: true, message: resData.message };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Registration failed';
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (token) => {
+    setLoading(true);
+    try {
+      const userData = await authApi.loginWithGoogle(token);
+      setUser(userData);
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Google login failed';
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await authApi.logout();
+      setUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, ChevronDown, LogOut, User, Folder, CalendarRange, PlusCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, Folder, CalendarRange, PlusCircle } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -18,6 +18,7 @@ export default function Navbar() {
     { name: 'Home', path: '/' },
     { name: 'Rooms', path: '/rooms' },
     { name: 'About', path: '/about' },
+    { name: 'FAQ', path: '/faq' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -28,7 +29,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/70 border-b border-slate-800/80">
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -54,7 +55,6 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Private Navigation Links in main Nav (if logged in) */}
             {user && (
               <div className="flex items-center space-x-6 border-l border-slate-800 pl-6">
                 {privateLinks.map((link) => (
@@ -193,7 +193,7 @@ export default function Navbar() {
             <>
               <div className="border-t border-slate-900 my-2 pt-2">
                 <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Private Dashboard
+                  Dashboard
                 </p>
               </div>
               {privateLinks.map((link) => (

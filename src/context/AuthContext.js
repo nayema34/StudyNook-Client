@@ -51,14 +51,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (token) => {
+  const loginWithGoogle = async () => {
     setLoading(true);
     try {
-      const userData = await authApi.loginWithGoogle(token);
-      setUser(userData);
+      await authApi.loginWithGoogle();
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Google login failed';
+      const message = err?.message || err?.response?.data?.message || 'Google login failed';
       return { success: false, message };
     } finally {
       setLoading(false);

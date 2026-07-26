@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "better-auth": "^1.6.23",
     "framer-motion": "^12.42.2",

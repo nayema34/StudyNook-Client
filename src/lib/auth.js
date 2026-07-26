@@ -44,6 +44,16 @@ export const register = async (name, email, photoUrl, password) => {
   };
 };
 
+export const loginWithGoogle = async () => {
+  const callbackURL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const res = await authClient.signIn.social({
+    provider: 'google',
+    callbackURL,
+  });
+  if (res?.error) throw new Error(res.error.message || "Google login failed");
+  return res;
+};
+
 export const logout = async () => {
   await authClient.signOut();
 };

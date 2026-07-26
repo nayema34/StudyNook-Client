@@ -45,7 +45,7 @@ export const register = async (name, email, photoUrl, password) => {
 };
 
 export const loginWithGoogle = async () => {
-  const callbackURL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const callbackURL = typeof window !== 'undefined' ? `${window.location.origin}/` : 'http://localhost:3000/';
   const res = await authClient.signIn.social({
     provider: 'google',
     callbackURL,

@@ -51,19 +51,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async () => {
-    setLoading(true);
-    try {
-      await authApi.loginWithGoogle();
-      return { success: true };
-    } catch (err) {
-      const message = err?.message || err?.response?.data?.message || 'Google login failed';
-      return { success: false, message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const logout = async () => {
     setLoading(true);
     try {
@@ -77,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -32,7 +32,6 @@ export default function AddRoom() {
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // Private Route Check
   useEffect(() => {
     if (!authLoading && !user) {
       toast.error('Please login to list a study room.');

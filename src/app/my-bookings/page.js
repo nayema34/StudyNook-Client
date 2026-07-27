@@ -19,7 +19,6 @@ export default function MyBookings() {
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
-  // Private Route Check
   useEffect(() => {
     if (!authLoading && !user) {
       toast.error('Please login to view your room bookings.');
@@ -53,7 +52,6 @@ export default function MyBookings() {
     );
   }
 
-  // Check if booking is in the future (today or later)
   const isEligibleForCancel = (booking) => {
     if (booking.status !== 'confirmed') return false;
     const todayStr = new Date().toISOString().split('T')[0];

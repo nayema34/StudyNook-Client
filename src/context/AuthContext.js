@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check login status on load
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {

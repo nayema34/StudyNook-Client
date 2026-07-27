@@ -19,10 +19,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Get redirect path
   const redirect = searchParams.get('redirect') || '/';
 
-  // If already logged in, redirect
   useEffect(() => {
     if (user) {
       router.push(redirect);

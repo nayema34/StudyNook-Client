@@ -5,14 +5,12 @@ import { Users, Layers, DollarSign } from 'lucide-react';
 export default function RoomCard({ room }) {
   const { _id, name, description, image, floor, capacity, hourlyRate, amenities } = room;
 
-  // Truncate description to ~100 characters
   const truncatedDesc = description.length > 100 
     ? `${description.substring(0, 97)}...` 
     : description;
 
   return (
     <div className="group flex flex-col h-full bg-slate-900 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl overflow-hidden transition-all duration-300 shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1">
-      {/* Image Container */}
       <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
         <img
           src={image}
@@ -24,7 +22,6 @@ export default function RoomCard({ room }) {
         />
       </div>
 
-      {/* Info Section */}
       <div className="flex flex-col flex-grow p-5 space-y-4">
         <div className="space-y-2 flex-grow">
           <h3 className="text-lg font-bold text-slate-100 group-hover:text-indigo-400 transition-colors line-clamp-1">
@@ -35,7 +32,6 @@ export default function RoomCard({ room }) {
           </p>
         </div>
 
-        {/* Specs Grid */}
         <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-800/60 text-xs text-slate-350">
           <div className="flex items-center gap-1.5 justify-center">
             <Layers className="w-3.5 h-3.5 text-indigo-400" />
@@ -51,7 +47,6 @@ export default function RoomCard({ room }) {
           </div>
         </div>
 
-        {/* Amenities */}
         <div className="flex flex-wrap gap-1.5 min-h-[26px]">
           {amenities.slice(0, 3).map((amenity, idx) => (
             <span
@@ -68,7 +63,6 @@ export default function RoomCard({ room }) {
           )}
         </div>
 
-        {/* Action Button */}
         <div>
           <Link
             href={`/rooms/${_id}`}

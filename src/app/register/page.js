@@ -31,7 +31,6 @@ export default function Register() {
     }
   };
 
-  // Password rules helper
   const [passLength, setPassLength] = useState(false);
   const [passUpper, setPassUpper] = useState(false);
   const [passLower, setPassLower] = useState(false);
@@ -42,7 +41,6 @@ export default function Register() {
     setPassLower(/[a-z]/.test(password));
   }, [password]);
 
-  // If already logged in, redirect
   useEffect(() => {
     if (user) {
       router.push('/');
@@ -57,7 +55,6 @@ export default function Register() {
       return;
     }
 
-    // Validate password constraints
     if (!passLength || !passUpper || !passLower) {
       setErrorMsg('Please satisfy all password complexity rules.');
       return;

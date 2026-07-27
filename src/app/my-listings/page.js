@@ -19,7 +19,6 @@ export default function MyListings() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Private route check
   useEffect(() => {
     if (!authLoading && !user) {
       toast.error('Please login to view your room listings.');

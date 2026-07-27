@@ -26,19 +26,16 @@ export default function RoomDetails() {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Modals state
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  // Booking Form state
   const [bookingDate, setBookingDate] = useState('');
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
   const [specialNote, setSpecialNote] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
 
-  // Edit Room Form state
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editImage, setEditImage] = useState('');

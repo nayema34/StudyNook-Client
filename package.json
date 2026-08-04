@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "dependencies": {
     "better-auth": "^1.6.23",

@@ -299,40 +299,8 @@ export default function Register() {
                 </div>
               </div>
 
-              {/* Photo Upload / URL Section */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-medium text-slate-300">
-                    Profile Photo <span className="text-rose-400">*</span>
-                  </label>
-                  <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 p-0.5 rounded-lg text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setPhotoMode('file')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all font-medium ${
-                        photoMode === 'file'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <UploadCloud className="w-3.5 h-3.5" />
-                      File Manager
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPhotoMode('url')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all font-medium ${
-                        photoMode === 'url'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <LinkIcon className="w-3.5 h-3.5" />
-                      Photo URL
-                    </button>
-                  </div>
-                </div>
-
+              {/* Left-Aligned Profile Photo Picker */}
+              <div className="py-1">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -341,125 +309,94 @@ export default function Register() {
                   className="hidden"
                 />
 
-                {photoMode === 'file' ? (
-                  photoUrl ? (
-                    /* Selected Image Preview Card */
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-slate-950 border border-indigo-500/30 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-inner"
-                    >
-                      <div className="flex items-center gap-3.5 overflow-hidden">
-                        <div className="relative group flex-shrink-0">
-                          <img
-                            src={photoUrl}
-                            alt="Profile preview"
-                            className="w-14 h-14 rounded-full object-cover border-2 border-indigo-500/60 shadow-md"
-                          />
-                          <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white p-0.5 rounded-full">
-                            <Check className="w-3 h-3" />
-                          </div>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-slate-200 truncate">
-                            {fileName || 'Profile Photo Selected'}
-                          </p>
-                          {fileSize && (
-                            <p className="text-[11px] text-slate-400 mt-0.5">{fileSize}</p>
-                          )}
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium mt-1">
-                            <Check className="w-3 h-3" /> Ready to upload
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-4 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+                  {/* Avatar Circle */}
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className="relative cursor-pointer group flex-shrink-0"
+                  >
+                    {photoUrl ? (
+                      <div className="relative">
+                        <img
+                          src={photoUrl}
+                          alt="Profile photo"
+                          className="w-14 h-14 rounded-full object-cover border-2 border-indigo-500 shadow-md group-hover:opacity-90 transition-opacity"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
+                          }}
+                        />
                         <button
                           type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs transition-colors flex items-center gap-1"
-                          title="Change photo"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleRemovePhoto}
-                          className="p-1.5 text-rose-400 hover:text-rose-300 bg-slate-900 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 rounded-lg text-xs transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemovePhoto();
+                          }}
+                          className="absolute -top-1 -right-1 bg-slate-900 border border-slate-700 text-slate-400 hover:text-rose-400 p-1 rounded-full shadow transition-colors"
                           title="Remove photo"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <X className="w-3 h-3" />
                         </button>
+                        <div className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full shadow-sm group-hover:bg-indigo-500 transition-colors">
+                          <Camera className="w-3 h-3" />
+                        </div>
                       </div>
-                    </motion.div>
-                  ) : (
-                    /* File Manager Dropzone */
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      className={`relative group cursor-pointer border-2 border-dashed rounded-xl p-5 text-center transition-all duration-200 ${
-                        dragActive
-                          ? 'border-indigo-500 bg-indigo-950/20 shadow-lg shadow-indigo-500/10 scale-[1.01]'
-                          : 'border-slate-800 bg-slate-950/70 hover:border-slate-700 hover:bg-slate-950'
-                      }`}
+                    ) : (
+                      <div className={`w-14 h-14 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${
+                        dragActive 
+                          ? 'border-indigo-500 bg-indigo-950/40 scale-105' 
+                          : 'border-slate-700 bg-slate-900 group-hover:border-indigo-500/80 group-hover:bg-slate-800'
+                      }`}>
+                        {uploadingPhoto ? (
+                          <RefreshCw className="w-5 h-5 text-indigo-400 animate-spin" />
+                        ) : (
+                          <Camera className="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Text Label & Action Links */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-200">
+                      {photoUrl ? 'Profile Photo Selected' : 'Add Profile Photo'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                      {photoUrl ? (fileName || 'Image ready to upload') : 'Click circle to pick from file manager'}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => setPhotoMode(photoMode === 'url' ? 'file' : 'url')}
+                      className="text-[11px] text-indigo-400 hover:text-indigo-350 mt-1 transition-colors block font-medium"
                     >
-                      {uploadingPhoto ? (
-                        <div className="flex flex-col items-center justify-center py-2">
-                          <RefreshCw className="w-7 h-7 text-indigo-400 animate-spin mb-2" />
-                          <p className="text-xs font-medium text-indigo-300">Processing photo...</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <div className="p-3 bg-slate-900/80 border border-slate-800 group-hover:border-indigo-500/40 rounded-full text-indigo-400 group-hover:scale-110 transition-transform">
-                            <UploadCloud className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-slate-200">
-                              Click to browse or drag photo here
-                            </p>
-                            <p className="text-[11px] text-slate-400 mt-1">
-                              Supports JPG, PNG, WEBP or GIF from File Manager
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                ) : (
-                  /* Photo URL Option */
-                  <div className="space-y-2">
+                      {photoMode === 'url' ? '← Choose from file manager' : 'Or paste Photo URL'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Optional Photo URL Input */}
+                {photoMode === 'url' && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="w-full mt-2.5"
+                  >
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                        <ImageIcon className="w-5 h-5" />
+                        <ImageIcon className="w-4 h-4" />
                       </div>
                       <input
                         type="url"
                         value={photoUrl}
                         onChange={(e) => setPhotoUrl(e.target.value)}
-                        className="pl-10 block w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl py-2.5 px-4 text-slate-100 placeholder-slate-500 focus:outline-none text-sm transition-all"
+                        className="pl-9 block w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl py-2 px-3 text-slate-100 placeholder-slate-500 focus:outline-none text-xs transition-all"
                         placeholder="https://images.unsplash.com/photo-..."
                       />
                     </div>
-
-                    {photoUrl && (
-                      <div className="flex items-center gap-3 bg-slate-950 border border-slate-800/60 rounded-xl p-2.5">
-                        <img
-                          src={photoUrl}
-                          alt="URL preview"
-                          className="w-10 h-10 rounded-full object-cover border border-indigo-500/40"
-                          onError={(e) => {
-                            e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
-                          }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-slate-300 truncate">URL Image Preview</p>
-                          <p className="text-[11px] text-slate-400 truncate">{photoUrl}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  </motion.div>
                 )}
               </div>
 

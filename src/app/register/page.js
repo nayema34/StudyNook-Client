@@ -1,13 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import MainLayout from '../../components/MainLayout';
 import toast from 'react-hot-toast';
-import { User, Mail, Image, Lock, UserPlus, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { 
+  User, 
+  Mail, 
+  Image as ImageIcon, 
+  Lock, 
+  UserPlus, 
+  ArrowRight, 
+  UploadCloud, 
+  Link as LinkIcon, 
+  X, 
+  Camera, 
+  RefreshCw, 
+  Check 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Register() {
   const { user, register, loginWithGoogle } = useAuth();
@@ -17,6 +30,14 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [password, setPassword] = useState('');
+
+  // Photo upload states
+  const [photoMode, setPhotoMode] = useState('file'); // 'file' | 'url'
+  const [fileName, setFileName] = useState('');
+  const [fileSize, setFileSize] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
   
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -47,11 +68,143 @@ export default function Register() {
     }
   }, [user, router]);
 
+  // Process selected image file with canvas compression & ImgBB upload fallback
+  const processImageFile = async (file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file (PNG, JPG, WEBP, GIF)');
+      return;
+    }
+
+    // Max 10MB input check
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size exceeds 10MB limit');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setFileName(file.name);
+    setFileSize((file.size / (1024 * 1024) >= 1) 
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
+      : `${(file.size / 1024).toFixed(1)} KB`);
+
+    try {
+      // 1. Try ImgBB upload if environment key exists
+      const imgbbKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+      if (imgbbKey) {
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+            method: 'POST',
+            body: formData,
+          });
+          const result = await response.json();
+          if (result.success && result.data?.url) {
+            setPhotoUrl(result.data.url);
+            toast.success('Photo uploaded successfully!');
+            setUploadingPhoto(false);
+            return;
+          }
+        } catch (imgbbErr) {
+          console.warn('ImgBB upload fallback to Data URL:', imgbbErr);
+        }
+      }
+
+      // 2. Client-side canvas compression to Base64 Data URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 400; // Optimal avatar dimension
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round((height * MAX_SIZE) / width);
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round((width * MAX_SIZE) / height);
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setPhotoUrl(compressedDataUrl);
+          toast.success('Photo selected from file manager!');
+          setUploadingPhoto(false);
+        };
+        img.onerror = () => {
+          toast.error('Failed to load image file');
+          setUploadingPhoto(false);
+        };
+        img.src = e.target.result;
+      };
+      reader.onerror = () => {
+        toast.error('Error reading image file');
+        setUploadingPhoto(false);
+      };
+      reader.readAsDataURL(file);
+
+    } catch (err) {
+      toast.error('Failed to process image');
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processImageFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoUrl('');
+    setFileName('');
+    setFileSize('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name || !email || !photoUrl || !password) {
-      setErrorMsg('All fields are required.');
+      setErrorMsg('All fields are required. Please upload or provide a photo.');
       return;
     }
 
@@ -97,7 +250,7 @@ export default function Register() {
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             {errorMsg && (
               <motion.div 
-                className="p-3.5 text-sm bg-rose-950/30 border border-rose-800/30 text-rose-455 rounded-xl"
+                className="p-3.5 text-sm bg-rose-950/30 border border-rose-800/30 text-rose-400 rounded-xl"
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
               >
@@ -106,8 +259,9 @@ export default function Register() {
             )}
 
             <div className="space-y-4 rounded-md shadow-sm">
+              {/* Full Name */}
               <div>
-                <label className="text-sm font-medium text-slate-350 block mb-1.5">
+                <label className="text-sm font-medium text-slate-300 block mb-1.5">
                   Full Name
                 </label>
                 <div className="relative">
@@ -125,6 +279,7 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Email */}
               <div>
                 <label className="text-sm font-medium text-slate-300 block mb-1.5">
                   Email Address
@@ -144,25 +299,171 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Photo Upload / URL Section */}
               <div>
-                <label className="text-sm font-medium text-slate-300 block mb-1.5">
-                  Photo URL
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <Image className="w-5 h-5" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-slate-300">
+                    Profile Photo <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 p-0.5 rounded-lg text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setPhotoMode('file')}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all font-medium ${
+                        photoMode === 'file'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      File Manager
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPhotoMode('url')}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all font-medium ${
+                        photoMode === 'url'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <LinkIcon className="w-3.5 h-3.5" />
+                      Photo URL
+                    </button>
                   </div>
-                  <input
-                    type="url"
-                    required
-                    value={photoUrl}
-                    onChange={(e) => setPhotoUrl(e.target.value)}
-                    className="pl-10 block w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl py-2.5 px-4 text-slate-100 placeholder-slate-500 focus:outline-none text-sm transition-all"
-                    placeholder="https://images.unsplash.com/photo-..."
-                  />
                 </div>
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {photoMode === 'file' ? (
+                  photoUrl ? (
+                    /* Selected Image Preview Card */
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-slate-950 border border-indigo-500/30 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-inner"
+                    >
+                      <div className="flex items-center gap-3.5 overflow-hidden">
+                        <div className="relative group flex-shrink-0">
+                          <img
+                            src={photoUrl}
+                            alt="Profile preview"
+                            className="w-14 h-14 rounded-full object-cover border-2 border-indigo-500/60 shadow-md"
+                          />
+                          <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white p-0.5 rounded-full">
+                            <Check className="w-3 h-3" />
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-200 truncate">
+                            {fileName || 'Profile Photo Selected'}
+                          </p>
+                          {fileSize && (
+                            <p className="text-[11px] text-slate-400 mt-0.5">{fileSize}</p>
+                          )}
+                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium mt-1">
+                            <Check className="w-3 h-3" /> Ready to upload
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs transition-colors flex items-center gap-1"
+                          title="Change photo"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="p-1.5 text-rose-400 hover:text-rose-300 bg-slate-900 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 rounded-lg text-xs transition-colors"
+                          title="Remove photo"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    /* File Manager Dropzone */
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`relative group cursor-pointer border-2 border-dashed rounded-xl p-5 text-center transition-all duration-200 ${
+                        dragActive
+                          ? 'border-indigo-500 bg-indigo-950/20 shadow-lg shadow-indigo-500/10 scale-[1.01]'
+                          : 'border-slate-800 bg-slate-950/70 hover:border-slate-700 hover:bg-slate-950'
+                      }`}
+                    >
+                      {uploadingPhoto ? (
+                        <div className="flex flex-col items-center justify-center py-2">
+                          <RefreshCw className="w-7 h-7 text-indigo-400 animate-spin mb-2" />
+                          <p className="text-xs font-medium text-indigo-300">Processing photo...</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <div className="p-3 bg-slate-900/80 border border-slate-800 group-hover:border-indigo-500/40 rounded-full text-indigo-400 group-hover:scale-110 transition-transform">
+                            <UploadCloud className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-200">
+                              Click to browse or drag photo here
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-1">
+                              Supports JPG, PNG, WEBP or GIF from File Manager
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                ) : (
+                  /* Photo URL Option */
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                      <input
+                        type="url"
+                        value={photoUrl}
+                        onChange={(e) => setPhotoUrl(e.target.value)}
+                        className="pl-10 block w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl py-2.5 px-4 text-slate-100 placeholder-slate-500 focus:outline-none text-sm transition-all"
+                        placeholder="https://images.unsplash.com/photo-..."
+                      />
+                    </div>
+
+                    {photoUrl && (
+                      <div className="flex items-center gap-3 bg-slate-950 border border-slate-800/60 rounded-xl p-2.5">
+                        <img
+                          src={photoUrl}
+                          alt="URL preview"
+                          className="w-10 h-10 rounded-full object-cover border border-indigo-500/40"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
+                          }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-slate-300 truncate">URL Image Preview</p>
+                          <p className="text-[11px] text-slate-400 truncate">{photoUrl}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Password */}
               <div>
                 <label className="text-sm font-medium text-slate-300 block mb-1.5">
                   Password
@@ -202,7 +503,7 @@ export default function Register() {
             <div>
               <motion.button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingPhoto}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 cursor-pointer"
@@ -228,7 +529,7 @@ export default function Register() {
             <motion.button
               type="button"
               onClick={handleGoogleSignIn}
-              disabled={loading}
+              disabled={loading || uploadingPhoto}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-200 font-medium text-sm transition-all duration-200 shadow-sm disabled:opacity-50 cursor-pointer"
@@ -259,3 +560,4 @@ export default function Register() {
     </MainLayout>
   );
 }
+
